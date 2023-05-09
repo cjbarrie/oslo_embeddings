@@ -10,19 +10,19 @@ editor: visual
 
 ## Orientalism
 
-![](data/ofcovers1.png){width="373"}
+![](data/ofcovers1.png){fig-align="center" width="373"}
 
 ## Orientalism
 
-![](data/ofcovers2.png){width="328"}
+![](data/ofcovers2.png){fig-align="center" width="328"}
 
 ## Orientalism
 
-![](data/ofcovers3.png){width="326"}
+![](data/ofcovers3.png){fig-align="center" width="326"}
 
 ## Orientalism
 
-![](data/ofcovers4.png){width="415"}
+![](data/ofcovers4.png){fig-align="center" width="415"}
 
 ## Orientalism
 
@@ -30,11 +30,11 @@ editor: visual
 
 ## Orientalism
 
-![](data/ofcovers6.png)
+[![](data/ofcovers6.png)](https://galaxy.opensyllabus.org/#!point/8108898763586)
 
 ## Orientalism
 
-![](data/ngrams.png)
+![](data/ngrams.png){fig-align="center"}
 
 ## What do this scholarship do?
 
@@ -63,7 +63,7 @@ This despite:
 
 -   Data:
     -   Google Books corpus: English (fic. + non-fic.), French (fic. + non-fic.), English (fic. only)
-    -   Embeddings from Hamilton et al. (2018) `HistWords` project trained with GloVe algorithm
+    -   Embeddings from Hamilton et al. (2018) [`HistWords`](https://nlp.stanford.edu/projects/histwords/) project trained with GloVe algorithm
 
 ## What is a word embedding?
 
@@ -78,52 +78,25 @@ This despite:
 
 ## Component parts
 
-We start with:
+The PMI is defined by the following formula:
 
--   Word pair matrix with PMI (Pairwise mutual information):
-    -   where PMI = log(P(x,y)/P(x)P(y))
-    -   and P(x,y) is the probability of word x appearing within a six-word window of word y
-    -   and P(x) is the probability of word x appearing in the whole corpus
-    -   and P(y) is the probability of word y appearing in the whole corpus
+$$
+\text{PMI} = \log\left(\frac{P(x,y)}{P(x) \cdot P(y)}\right)
+$$
 
-## Data structure
+Where:
 
-```{r, eval = T, echo = F}
-load("data/pmi_svd.RData")
-load("data/pmi_matrix.RData")
-```
+-   $P(x,y)$ is the probability of word $x$ appearing within a six-word window of word `y`
+-   $P(x)$ is the probability of word `x` appearing in the whole corpus
+-   $P(y)$ is the probability of word `y` appearing in the whole corpus
 
-```{r ,eval = F}
-head(pmi_matrix[1:6, 1:6])
-```
+## Windows and targets
 
-|     | the         | to          | and         |
-|-----|-------------|-------------|-------------|
-| the | 0.653259169 | -0.01948121 | -0.00644646 |
-| to  | -0.01948121 | 0.75498084  | -0.06517043 |
-| and | -0.00644646 | -0.06517043 | 1.02778234  |
-
-## Singular value decomposition
-
-```{r ,echo=T, eval = F}
-
-pmi_svd <- irlba(pmi_matrix, 256, maxit = 500)
-
-```
-
-## Word vectors
-
-```{r ,echo=T, eval = T}
-
-word_vectors <- pmi_svd$u
-rownames(word_vectors) <- rownames(pmi_matrix)
-dim(word_vectors)
-
-```
+![](data/matrix_context.png){fig-align="center" width="50%"}
 
 ## Word embeddings with GloVe
 
-After we've generated our term (feature) co-ocurrence matrix (similar to the PMI matrix above)...
+After we've generated our term (feature) co-ocurrence matrix
 
 ```{r, eval = F, echo = T}
 WINDOW_SIZE <- 6
@@ -153,7 +126,7 @@ We are working with these:
 | man   | 1.0         | -0.2        | 0.9         |
 | woman | 0.9         | -0.1        | 1.0         |
 
-But we have these over every decade 1800-2010 trained on the entiretey of Google Books (tens of millions of published works).
+But we have these over every decade 1800-2010 trained on the entirety of Google Books (tens of millions of published works).
 
 ## So why are these useful?
 
@@ -164,21 +137,36 @@ But we have these over every decade 1800-2010 trained on the entiretey of Google
 
 ## \_
 
-![](data/article1.png)
+![](data/article1.png){fig-align="center"}
 
 ## \_
 
-![](data/article2.png)
+![](data/article2.png){fig-align="center"}
 
 ## \_
 
-![](data/article3.png)
+![](data/article3.png){fig-align="center"}
 
 ## Estimation procedure
 
 -   Same as in articles by Manzini et al. (2018) and Charlesworth et al. (2022)
     -   Mean average cosine similarity (MAC) implemented in `sweater` R package by Chung-hong Chan.
-    -   Defined as: \[DEFINE HERE\]
+
+## Estimation procedure
+
+$$
+MAC = \frac{1}{N} \sum_{i=1}^{N} \frac{\mathbf{A}_i \cdot \mathbf{B}_i}{||\mathbf{A}_i|| \cdot ||\mathbf{B}_i||}
+$$
+
+Where:
+
+-   $\mathbf{A}_i$ and $\mathbf{B}_i$ are the i-th pair of vectors from the two sets.
+
+-   $\mathbf{A}_i \cdot \mathbf{B}_i$ is the dot product of the vectors.
+
+-   $||\mathbf{A}_i||$ and $||\mathbf{B}_i||$ are the magnitudes of the vectors.
+
+-   $N$ is the total number of vector pairs.
 
 ## Seed words
 
@@ -189,7 +177,7 @@ Select four dimensions based on secondary scholarship + close reading:
 3.  Despotism
 4.  Eroticism
 
-Expand using `gensim` + manual classification.
+Expand using `gensim` of Google News corpus + manual classification.
 
 ## For each set of words:
 
@@ -230,19 +218,19 @@ P_all_mean <- P_all_long %>%
 
 ## Results
 
-![](data/g1.png)
+![](data/g1.png){fig-align="center"}
 
 ## Results
 
-![](data/g2.png)
+![](data/g2.png){fig-align="center"}
 
 ## Results
 
-![](data/g3.png)
+![](data/g3.png){fig-align="center"}
 
 ## Results
 
-![](data/g4.png)
+![](data/g4.png){fig-align="center"}
 
 ## Future directions
 
