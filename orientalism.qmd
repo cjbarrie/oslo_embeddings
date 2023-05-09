@@ -1,0 +1,252 @@
+---
+title: "Orientalism has declined over the last one hundred years"
+subtitle: "Oslo, 2023"
+author: Christopher Barrie
+format:
+  revealjs:
+    chalkboard: true
+editor: visual
+---
+
+## Orientalism
+
+![](data/ofcovers1.png){width="373"}
+
+## Orientalism
+
+![](data/ofcovers2.png){width="328"}
+
+## Orientalism
+
+![](data/ofcovers3.png){width="326"}
+
+## Orientalism
+
+![](data/ofcovers4.png){width="415"}
+
+## Orientalism
+
+![](data/ofcovers5.png)
+
+## Orientalism
+
+![](data/ofcovers6.png)
+
+## Orientalism
+
+![](data/ngrams.png)
+
+## What do this scholarship do?
+
+Spans:
+
+1.  Humanities
+2.  Social sciences
+3.  Social/critical theory
+
+## What does this scholarship do?
+
+1.  Exegesis (tafsīr?) of Said
+2.  Postcolonial theory
+3.  Literary criticism
+
+## What does this scholarship not do
+
+1.  Quantify trends in Orientalism over time (/test if Said was right!)
+
+This despite:
+
+1.  Rise of digital humanities
+2.  Rise of quantitative techniques for analyzing semantic content of texts
+
+## What do I do?
+
+-   Data:
+    -   Google Books corpus: English (fic. + non-fic.), French (fic. + non-fic.), English (fic. only)
+    -   Embeddings from Hamilton et al. (2018) `HistWords` project trained with GloVe algorithm
+
+## What is a word embedding?
+
+|       | Dimension 1 | Dimension 2 | Dimension 3 |
+|-------|-------------|-------------|-------------|
+| king  | 1.2         | 0.7         | -0.3        |
+| queen | 1.1         | 0.8         | -0.2        |
+| man   | 1.0         | -0.2        | 0.9         |
+| woman | 0.9         | -0.1        | 1.0         |
+
+...but bigger than this
+
+## Component parts
+
+We start with:
+
+-   Word pair matrix with PMI (Pairwise mutual information):
+    -   where PMI = log(P(x,y)/P(x)P(y))
+    -   and P(x,y) is the probability of word x appearing within a six-word window of word y
+    -   and P(x) is the probability of word x appearing in the whole corpus
+    -   and P(y) is the probability of word y appearing in the whole corpus
+
+## Data structure
+
+```{r, eval = T, echo = F}
+load("data/pmi_svd.RData")
+load("data/pmi_matrix.RData")
+```
+
+```{r ,eval = F}
+head(pmi_matrix[1:6, 1:6])
+```
+
+|     | the         | to          | and         |
+|-----|-------------|-------------|-------------|
+| the | 0.653259169 | -0.01948121 | -0.00644646 |
+| to  | -0.01948121 | 0.75498084  | -0.06517043 |
+| and | -0.00644646 | -0.06517043 | 1.02778234  |
+
+## Singular value decomposition
+
+```{r ,echo=T, eval = F}
+
+pmi_svd <- irlba(pmi_matrix, 256, maxit = 500)
+
+```
+
+## Word vectors
+
+```{r ,echo=T, eval = T}
+
+word_vectors <- pmi_svd$u
+rownames(word_vectors) <- rownames(pmi_matrix)
+dim(word_vectors)
+
+```
+
+## Word embeddings with GloVe
+
+After we've generated our term (feature) co-ocurrence matrix (similar to the PMI matrix above)...
+
+```{r, eval = F, echo = T}
+WINDOW_SIZE <- 6
+DIM <- 300
+ITERS <- 100
+
+glove <- GlobalVectors$new(rank = DIM, 
+                           x_max = 100,
+                           learning_rate = 0.05)
+                           
+wv_main <- glove$fit_transform(toks_fcm, n_iter = ITERS,
+                               convergence_tol = 1e-3, 
+                               n_threads = parallel::detectCores()) # set to 'parallel::detectCores()' to use all available cores
+
+wv_context <- glove$components
+local_glove <- wv_main + t(wv_context) # word vectors
+```
+
+## Back to Said...
+
+We are working with these:
+
+|       | Dimension 1 | Dimension 2 | Dimension 3 |
+|-------|-------------|-------------|-------------|
+| king  | 1.2         | 0.7         | -0.3        |
+| queen | 1.1         | 0.8         | -0.2        |
+| man   | 1.0         | -0.2        | 0.9         |
+| woman | 0.9         | -0.1        | 1.0         |
+
+But we have these over every decade 1800-2010 trained on the entiretey of Google Books (tens of millions of published works).
+
+## So why are these useful?
+
+-   Allow us to look at relationship *between* words
+    -   "we shall know a word by the company it keeps" (Firth, 1957)
+-   Allow us to understand relatinship *between* words *over time*
+    -   has made possible a number of important articles excavating over-time trends in bias and prejudice...
+
+## \_
+
+![](data/article1.png)
+
+## \_
+
+![](data/article2.png)
+
+## \_
+
+![](data/article3.png)
+
+## Estimation procedure
+
+-   Same as in articles by Manzini et al. (2018) and Charlesworth et al. (2022)
+    -   Mean average cosine similarity (MAC) implemented in `sweater` R package by Chung-hong Chan.
+    -   Defined as: \[DEFINE HERE\]
+
+## Seed words
+
+Select four dimensions based on secondary scholarship + close reading:
+
+1.  Exoticism
+2.  Irrationality
+3.  Despotism
+4.  Eroticism
+
+Expand using `gensim` + manual classification.
+
+## For each set of words:
+
+Calculate cosine similarity between the word "Arab" and each individual word in each dimension.
+
+```{r, eval = F, echo = T}
+S1 <- exotic_strange_words
+A1 <- c("arab")
+
+P_all <- data.frame(matrix(ncol=0, nrow=length(S1)))
+for (i in seq_along(wordvecs.dat)) {
+
+  embedding <- as.matrix(wordvecs.dat[[i]])
+  x <- mac(embedding, S1, A1) #this function calculates MAC
+
+  P <- as.data.frame(x$P)
+  colnames(P) <- decade_names[[i]]
+  P_all <- cbind(P_all, P)
+}
+
+```
+
+## For each set of words:
+
+```{r, eval = F, echo = T}
+P_all <- P_all %>%
+  rownames_to_column("word")
+
+P_all_long <- P_all %>% gather(year, value, -c("word"))
+P_all_long$year <- as.numeric(P_all_long$year)
+
+# this section is essentially doing what `mac_es()` would do if called in loop
+P_all_mean <- P_all_long %>%
+  group_by(year) %>%
+  summarise(mean_sim = mean(value, na.rm = T), #note: averaging across non-NA values
+            word = "average")
+```
+
+## Results
+
+![](data/g1.png)
+
+## Results
+
+![](data/g2.png)
+
+## Results
+
+![](data/g3.png)
+
+## Results
+
+![](data/g4.png)
+
+## Future directions
+
+-   Change point analyses
+-   French corpus
+-   External validity
+-   Alternative dimensions (?)

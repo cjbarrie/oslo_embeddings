@@ -1,0 +1,99 @@
+---
+title: "Word embeddings"
+subtitle: "Oslo, 2023"
+author: Christopher Barrie
+format:
+  revealjs:
+    chalkboard: true
+editor: visual
+---
+
+## Manipulating text
+
+```{r, eval = T, echo = T}
+library(Matrix) #for handling matrices
+library(tidyverse) #loads dplyr, ggplot2 etc.
+library(irlba) # for SVD
+library(umap) # for dimensionality reduction
+```
+
+## Word embedding
+
+```{r, eval = T, echo = F}
+load("data/pmi_svd.RData")
+load("data/pmi_matrix.RData")
+```
+
+## Data structure
+
+-   Word pair matrix with PMI (Pairwise mutual information)
+
+-   where PMI = log(P(x,y)/P(x)P(y))
+
+-   and P(x,y) is the probability of word x appearing within a six-word window of word y
+
+-   and P(x) is the probability of word x appearing in the whole corpus
+
+-   and P(y) is the probability of word y appearing in the whole corpus
+
+## Data structure
+
+```{r ,echo=F}
+
+head(pmi_matrix[1:6, 1:6])
+
+```
+
+## Data structure
+
+```{r ,echo=F}
+
+glimpse(pmi_matrix)
+
+```
+
+## Singular value decomposition
+
+```{r ,echo=F, eval = F}
+
+pmi_svd <- irlba(pmi_matrix, 256, maxit = 500)
+
+```
+
+## Singular value decomposition
+
+```{r ,echo=T, eval = T}
+
+word_vectors <- pmi_svd$u
+rownames(word_vectors) <- rownames(pmi_matrix)
+dim(word_vectors)
+
+```
+
+## Singular value decomposition
+
+```{r ,echo=T, eval = T}
+
+head(word_vectors[1:5, 1:5])
+```
+
+## Word embeddings with GloVe
+
+After we've generated our term (feature) co-ocurrence matrix...
+
+```{r, eval = F, echo = T}
+WINDOW_SIZE <- 6
+DIM <- 300
+ITERS <- 100
+
+glove <- GlobalVectors$new(rank = DIM, 
+                           x_max = 100,
+                           learning_rate = 0.05)
+                           
+wv_main <- glove$fit_transform(toks_fcm, n_iter = ITERS,
+                               convergence_tol = 1e-3, 
+                               n_threads = parallel::detectCores()) # set to 'parallel::detectCores()' to use all available cores
+
+wv_context <- glove$components
+local_glove <- wv_main + t(wv_context) # word vectors
+```
