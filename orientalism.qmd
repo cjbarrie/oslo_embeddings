@@ -232,6 +232,12 @@ P_all_mean <- P_all_long %>%
 
 ![](data/g4.png){fig-align="center"}
 
+## Intepretation
+
+- “I have already lost, Kingdom after Kingdom, province after province, the more beautiful half of the universe, and soon I will know of no place in which I can find a refuge for my dreams; but it is Egypt that I most regret having driven out of my imagination, now that I have sadly placed it in my memory.” (Nerval, cited in Said, 100)
+
+- “Unable to recognize "its" Orient in the new Third World, Orientalism now faced a challenging and politically armed Orient.” (Said 1978, 104)
+
 ## Future directions
 
 -   Change point analyses
