@@ -244,3 +244,7 @@ P_all_mean <- P_all_long %>%
 -   French corpus
 -   External validity
 -   Alternative dimensions (?)
+
+## Materials
+
+[https://github.com/cjbarrie/oslo_embeddings](https://github.com/cjbarrie/oslo_embeddings)
